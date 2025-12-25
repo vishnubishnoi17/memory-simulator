@@ -116,7 +116,7 @@ void MemorySimulator::access_virtual(uintptr_t va) {
         for (auto& c : caches) {
             
 bool access_hit; 
-bool hit = c.access(pa, access_hit, time); 
+c.access(pa, access_hit, time); 
         }
         // Access physical at pa
     }

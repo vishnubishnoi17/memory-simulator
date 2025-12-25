@@ -13,6 +13,6 @@ test: tests/test_main.cpp $(SOURCES)
 	$(CC) $(CFLAGS) -o tests $^
 
 clean:
-	rm -f $(EXEC) tests
-
+	rm -f memsim
+	rm -rf tests
 .PHONY: all test clean
