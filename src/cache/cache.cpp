@@ -1,34 +1,56 @@
 #include "cache.h"
 #include <algorithm>
 
-CacheLevel::CacheLevel(uintptr_t s, uintptr_t b, uintptr_t a, Policy p) 
-    : size(s), block_size(b), associativity(a), hits(0), misses(0), policy(p) {
+namespace MemorySimulator {
+
+CacheLevel::CacheLevel(uintptr_t s, uintptr_t b, uintptr_t a, Policy p)
+    : size(s), block_size(b), associativity(a),
+      hits(0), misses(0), policy(p) 
+{
     uintptr_t num_sets = size / (block_size * a);
     cache_lines.resize(num_sets);
 }
 
-bool CacheLevel::access(uintptr_t addr, uintptr_t& data, uintptr_t time) {
+unsigned long CacheLevel::access(unsigned long addr,
+                                 bool &hit,
+                                 unsigned long &evicted)
+{
     uintptr_t set_idx = (addr / block_size) % cache_lines.size();
     uintptr_t tag = addr / (block_size * cache_lines.size());
-    auto& set = cache_lines[set_idx];
+    auto &set = cache_lines[set_idx];
 
     auto it = set.find(tag);
+
+    // Cache HIT
     if (it != set.end()) {
         ++hits;
-        it->second.second = time;  // Update timestamp for LRU
-        data = it->second.first;
-        return true;  // Hit
+        hit = true;
+        it->second.second = addr;   // timestamp substitute
+        evicted = 0;
+        return it->second.first;
     }
+
+    // Cache MISS
     ++misses;
-    // Evict (simplified: LRU overwrites least recent; FIFO could use queue)
+    hit = false;
+
+    // Eviction if set full
     if (set.size() >= associativity) {
         auto evict_it = set.begin();
         for (auto itr = set.begin(); itr != set.end(); ++itr) {
-            if (itr->second.second < evict_it->second.second) evict_it = itr;
+            if (itr->second.second < evict_it->second.second)
+                evict_it = itr;
         }
-        set.erase(evict_it->first);
+
+        evicted = evict_it->first;
+        set.erase(evict_it);
+    } else {
+        evicted = 0;
     }
-    set[tag] = {0, time};  // Load from lower, data is dummy (0)
-    data = 0;
-    return false;  // Miss
+
+    // Insert new block (dummy data value = 0)
+    set[tag] = {0, addr};
+    return 0;
 }
+
+} // namespace MemorySimulator
