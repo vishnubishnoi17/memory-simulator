@@ -1,8 +1,9 @@
+
 #include "cache.h"
 #include <algorithm>
 
 CacheLevel::CacheLevel(uintptr_t s, uintptr_t b, uintptr_t a, Policy p) 
-    : size(s), block_size(b), associativity(a), policy(p), hits(0), misses(0) {
+    : size(s), block_size(b), associativity(a), hits(0), misses(0), policy(p) {
     uintptr_t num_sets = size / (block_size * a);
     cache_lines.resize(num_sets);
 }
@@ -23,8 +24,8 @@ bool CacheLevel::access(uintptr_t phys_addr, uintptr_t& data, uintptr_t current_
     // Evict (simplified: LRU overwrites least recent; FIFO could use queue)
     if (set.size() >= associativity) {
         auto evict_it = set.begin();
-        for (auto& entry : set) {
-            if (entry.second.second < evict_it->second.second) evict_it = &entry;
+        for (auto itr = set.begin(); itr != set.end(); ++itr) {
+            if (itr->second.second < evict_it->second.second) evict_it = itr;
         }
         set.erase(evict_it->first);
     }
