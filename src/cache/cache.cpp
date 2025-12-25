@@ -7,7 +7,7 @@ CacheLevel::CacheLevel(uintptr_t s, uintptr_t b, uintptr_t a, Policy p)
     cache_lines.resize(num_sets);
 }
 
-bool CacheLevel::access(uintptr_t addr, bool& hit, uintptr_t& time) {
+bool CacheLevel::access(uintptr_t addr, uintptr_t& data, uintptr_t time) {
     uintptr_t set_idx = (addr / block_size) % cache_lines.size();
     uintptr_t tag = addr / (block_size * cache_lines.size());
     auto& set = cache_lines[set_idx];
@@ -16,11 +16,10 @@ bool CacheLevel::access(uintptr_t addr, bool& hit, uintptr_t& time) {
     if (it != set.end()) {
         ++hits;
         it->second.second = time;  // Update timestamp for LRU
-        hit = true;
+        data = it->second.first;
         return true;  // Hit
     }
     ++misses;
-    hit = false;
     // Evict (simplified: LRU overwrites least recent; FIFO could use queue)
     if (set.size() >= associativity) {
         auto evict_it = set.begin();
@@ -30,5 +29,6 @@ bool CacheLevel::access(uintptr_t addr, bool& hit, uintptr_t& time) {
         set.erase(evict_it->first);
     }
     set[tag] = {0, time};  // Load from lower, data is dummy (0)
+    data = 0;
     return false;  // Miss
 }
