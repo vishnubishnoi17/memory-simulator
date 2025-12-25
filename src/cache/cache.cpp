@@ -1,4 +1,3 @@
-
 #include "cache.h"
 #include <algorithm>
 
@@ -8,19 +7,20 @@ CacheLevel::CacheLevel(uintptr_t s, uintptr_t b, uintptr_t a, Policy p)
     cache_lines.resize(num_sets);
 }
 
-bool CacheLevel::access(uintptr_t phys_addr, uintptr_t& data, uintptr_t current_time) {
-    uintptr_t set_idx = (phys_addr / block_size) % cache_lines.size();
-    uintptr_t tag = phys_addr / (block_size * cache_lines.size());
+bool CacheLevel::access(uintptr_t addr, bool& hit, uintptr_t& time) {
+    uintptr_t set_idx = (addr / block_size) % cache_lines.size();
+    uintptr_t tag = addr / (block_size * cache_lines.size());
     auto& set = cache_lines[set_idx];
 
     auto it = set.find(tag);
     if (it != set.end()) {
         ++hits;
-        it->second.second = current_time;  // Update timestamp for LRU
-        data = it->second.first;
+        it->second.second = time;  // Update timestamp for LRU
+        hit = true;
         return true;  // Hit
     }
     ++misses;
+    hit = false;
     // Evict (simplified: LRU overwrites least recent; FIFO could use queue)
     if (set.size() >= associativity) {
         auto evict_it = set.begin();
@@ -29,7 +29,6 @@ bool CacheLevel::access(uintptr_t phys_addr, uintptr_t& data, uintptr_t current_
         }
         set.erase(evict_it->first);
     }
-    set[tag] = {0 /*dummy data*/, current_time};  // Load from lower
-    data = 0;
+    set[tag] = {0, time};  // Load from lower, data is dummy (0)
     return false;  // Miss
 }
