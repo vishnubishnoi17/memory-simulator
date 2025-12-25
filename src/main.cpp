@@ -111,8 +111,8 @@ void MemorySimulator::access_virtual(uintptr_t va) {
     if (fault) {
         // handle_fault(va);
     } else {
-        uintptr_t data, time = 0;  // clock++
-        bool overall_hit = true;
+        uintptr_t time = 0;  // clock++
+        
         for (auto& c : caches) {
             
 bool access_hit; 
