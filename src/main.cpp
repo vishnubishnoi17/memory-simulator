@@ -106,7 +106,7 @@ void MemorySimulator::set_allocator(AllocatorType type) {
 }
 
 void MemorySimulator::access_virtual(uintptr_t va) {
-    bool fault;
+    bool fault = false;
     uintptr_t pa = 0;  // translate(va, fault);  // VM
     if (fault) {
         // handle_fault(va);
