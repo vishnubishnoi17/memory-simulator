@@ -1,5 +1,5 @@
 #include "buddy_allocator.h"
-#include "block.h"
+#include "../allocator/block.h"
 #include <list>
 #include <cmath>
 
