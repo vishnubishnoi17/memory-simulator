@@ -5,6 +5,7 @@
 #include <sstream>
 #include <memory>
 #include <iomanip>
+#include "virtual_memory/vm.h" 
 
 std::unique_ptr<AllocatorStrategy> create_strategy(AllocatorType type, uintptr_t size = 0) {
     switch (type) {
